@@ -13,6 +13,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var mTitle: TextView
     var mBoxes: MutableList<CheckBox> = mutableListOf()
     var mButtons: MutableList<Button> = mutableListOf()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -27,12 +28,30 @@ class MainActivity : AppCompatActivity() {
         mTitle.layoutParams = params
         mLayout.addView(mTitle)
 
+
         for (i in 1..6) {
+
+            val row = LinearLayout(this)
+            row.layoutParams = LinearLayout.LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            )
+            row.orientation = LinearLayout.HORIZONTAL
             val checkBox = CheckBox(this)
             checkBox.text = "Zadanie ${i}"
             checkBox.isEnabled = false
-            mLayout.addView(checkBox)
+            var mButton = Button(this).also {
+                it.text = "Testuj"
+                it.textSize = 24f
+                //it.setOnClickListener(this,"Testuj")
+            }
             mBoxes.add(checkBox)
+            mButtons.add(mButton)
+            row.addView(checkBox)
+            row.addView(mButton)
+            mLayout.addView(row)
+
+
         }
 
         if (
@@ -92,10 +111,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
+
     // Wykonaj dzielenie niecałkowite parametru a przez b
     // Wynik zwróć po instrukcji return
     private fun task11(a: Int, b: Int): Double {
-        return 0.0
+        return a.toDouble() / b
     }
 
     // Zdefiniuj funkcję, która zwraca łańcuch dla argumentów bez znaku (zawsze dodatnie) wg schematu
@@ -103,12 +124,12 @@ class MainActivity : AppCompatActivity() {
     // np. dla parametrów a = 2 i b = 3
     // 2 + 3 = 5
     private fun task12(a: UInt, b: UInt): String {
-        return ""
+        return "$a + $b = " + (a + b)
     }
 
     // Zdefiniu funkcję, która zwraca wartość logiczną, jeśli parametr `a` jest nieujemny i mniejszy od `b`
     fun task13(a: Double, b: Float): Boolean {
-        return false
+        return a>=0 && a<b
     }
 
     // Zdefiniuj funkcję, która zwraca łańcuch dla argumentów całkowitych ze znakiem wg schematu
@@ -121,7 +142,7 @@ class MainActivity : AppCompatActivity() {
     // Wskazówki:
     // Math.abs(a) - zwraca wartość bezwględną
     fun task14(a: Int, b: Int): String {
-       return ""
+        return if (b>=0) "$a + $b = " + (a + b) else "$a - "+ b*(-1) + " = " + (a + b)
     }
 
     // Zdefiniuj funkcję zwracającą ocenę jako liczbę całkowitą na podstawie łańcucha z opisem słownym oceny.
@@ -134,7 +155,16 @@ class MainActivity : AppCompatActivity() {
     // Funkcja nie powinna być wrażliwa na wielkość znaków np. Dobry, DORBRY czy DoBrY to ta sama ocena
     // Wystąpienie innego łańcucha w degree funkcja zwraca wartość -1
     fun task15(degree: String): Int {
-        return 0
+        var output = when(degree.lowercase()){
+            "bardzo dobry" -> 5
+            "dobry"-> 4
+            "dostateczny"-> 3
+            "dopuszczający"-> 2
+            "niedostateczny"-> 1
+            else -> -1
+        }
+        return output
+
     }
 
     // Zdefiniuj funkcję zwracającą liczbę możliwych do zbudowania egzemplarzy, które składają się z elementów umieszczonych w asset
