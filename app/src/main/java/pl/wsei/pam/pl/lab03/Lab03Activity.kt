@@ -6,10 +6,17 @@ import android.view.Gravity
 import android.view.View
 import android.widget.GridLayout
 import android.widget.ImageButton
+import android.widget.Toast
 import pl.wsei.pam.lab01.R
 import java.util.Stack
+import java.util.Timer
+import kotlin.concurrent.schedule
 
 class Lab03Activity : AppCompatActivity() {
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString("state","state")
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_lab03)
@@ -18,8 +25,40 @@ class Lab03Activity : AppCompatActivity() {
         val mBoard: GridLayout = findViewById(R.id.grid1)
         mBoard.columnCount = columns
         mBoard.rowCount = rows
+        if (savedInstanceState != null){
 
+            //kod odczytu stanu z savedInstanceState
+            //utworznie modelu planszy i przywrócenia stanu zapisanego przed oborotem
+        } else {
+
+        }
         val mBoardModel = MemoryBoardView(mBoard, columns, rows)
+
+        mBoardModel.setOnGameChangeListener { e ->
+            run {
+                when (e.state) {
+                    GameStates.Matching -> {
+                        e.tiles.forEach{ tile -> tile.revealed = true}
+                    }
+                    GameStates.Match -> {
+                        e.tiles.forEach{ tile -> tile.revealed = true}
+                    }
+                    GameStates.NoMatch -> {
+                        e.tiles.forEach{ tile -> tile.revealed = true
+
+                            Timer().schedule(500) {
+                                    runOnUiThread() {
+                                        tile.revealed = false
+                                    }
+                            }
+                        }
+                    }
+                    GameStates.Finished -> {
+                        Toast.makeText(this, "Game finished", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
     }
     class MemoryBoardView(
         private val gridLayout: GridLayout,
@@ -35,8 +74,23 @@ class Lab03Activity : AppCompatActivity() {
             R.drawable.baseline_water_drop_24,
             R.drawable.baseline_wb_cloudy_24,
             R.drawable.baseline_wifi_24,
+            R.drawable.baseline_yard_24,
+            R.drawable.baseline_moon,
+            R.drawable.baseline_bolt_24,
+            R.drawable.baseline_cake_24,
+            R.drawable.baseline_directions_railway_24,
+            R.drawable.baseline_water_drop_24,
+            R.drawable.baseline_wb_cloudy_24,
+            R.drawable.baseline_wifi_24,
+            R.drawable.baseline_yard_24,
+            R.drawable.baseline_moon,
+            R.drawable.baseline_bolt_24,
+            R.drawable.baseline_cake_24,
+            R.drawable.baseline_directions_railway_24,
+            R.drawable.baseline_water_drop_24,
+            R.drawable.baseline_wb_cloudy_24,
+            R.drawable.baseline_wifi_24,
             R.drawable.baseline_yard_24
-            // dodaj kolejne identyfikatory utworzonych ikon
         )
         init {
             val shuffledIcons: MutableList<Int> = mutableListOf<Int>().also {
@@ -59,23 +113,23 @@ class Lab03Activity : AppCompatActivity() {
                         layoutParams.columnSpec = GridLayout.spec(col, 1, 1f)
                         layoutParams.rowSpec = GridLayout.spec(row, 1, 1f)
                         it.layoutParams = layoutParams
-                        gridLayout.addView(it)
                     }
-                    tiles[tag] = (Tile(btn, shuffledIcons.get(0), R.drawable.baseline_rocket_launch_24))
-                    shuffledIcons.remove(0)
+                    gridLayout.addView(btn);
+
+                    addTile(btn, shuffledIcons[0])
+                    shuffledIcons.removeAt(0)
                 }
             }
 
-            // tu umieść kod pętli tworzący wszystkie karty, który jest obecnie
-            // w aktywności Lab03Activity
         }
-        private val deckResource: Int = R.drawable.baseline_audiotrack_24
+        private val deckResource: Int = R.drawable.baseline_rocket_launch_24
         private var onGameChangeStateListener: (MemoryGameEvent) -> Unit = { (e) -> }
         private val matchedPair: Stack<Tile> = Stack()
         private val logic: MemoryGameLogic = MemoryGameLogic(cols * rows / 2)
 
         private fun onClickTile(v: View) {
             val tile = tiles[v.tag]
+            tile?.revealed = true
             matchedPair.push(tile)
             val matchResult = logic.process {
                 tile?.tileResource?:-1
@@ -86,6 +140,29 @@ class Lab03Activity : AppCompatActivity() {
             }
         }
 
+
+
+
+        fun getState() : state {
+            var state : MutableList<Int> = mutableListOf<Int>()
+            for (tile in tiles)
+            {
+                if(tile.value.revealed)
+                {
+                    state.add(123)
+                } else {
+                    state.add(-1)
+                }
+            }
+            return state
+        }
+
+
+        fun setState(state){
+
+        }
+
+
         fun setOnGameChangeListener(listener: (event: MemoryGameEvent) -> Unit) {
             onGameChangeStateListener = listener
         }
@@ -95,6 +172,7 @@ class Lab03Activity : AppCompatActivity() {
             val tile = Tile(button, resourceImage, deckResource)
             tiles[button.tag.toString()] = tile
         }
+
     }
 
     data class MemoryGameEvent(
