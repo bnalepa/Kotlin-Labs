@@ -28,10 +28,6 @@ class MainActivity : AppCompatActivity() {
     }
     fun onClickMainBtnRunLab03(view: View){
         val intent = Intent(this, Lab03Activity::class.java)
-        val columns: Int = 5
-        val rows: Int = 4
-        intent.putExtra("columns", columns)
-        intent.putExtra("rows", rows)
         startActivity(intent)
     }
 }

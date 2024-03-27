@@ -13,10 +13,7 @@ import java.util.Timer
 import kotlin.concurrent.schedule
 
 class Lab03Activity : AppCompatActivity() {
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putString("state","state")
-    }
+    private lateinit var mBoardModel: MemoryBoardView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_lab03)
@@ -25,45 +22,58 @@ class Lab03Activity : AppCompatActivity() {
         val mBoard: GridLayout = findViewById(R.id.grid1)
         mBoard.columnCount = columns
         mBoard.rowCount = rows
-        if (savedInstanceState != null){
+        mBoardModel = MemoryBoardView(mBoard, columns, rows)
+        if (savedInstanceState != null) {
 
-            //kod odczytu stanu z savedInstanceState
-            //utworznie modelu planszy i przywrócenia stanu zapisanego przed oborotem
-        } else {
-
+            val gameStateString = savedInstanceState.getString("gameState")
+            val gameState = gameStateString?.split(",")?.map { it.toInt() } ?: listOf()
+            mBoardModel.setState(gameState)
         }
-        val mBoardModel = MemoryBoardView(mBoard, columns, rows)
+
 
         mBoardModel.setOnGameChangeListener { e ->
             run {
                 when (e.state) {
                     GameStates.Matching -> {
-                        e.tiles.forEach{ tile -> tile.revealed = true}
+                        e.tiles.forEach { tile -> tile.revealed = true }
                     }
+
                     GameStates.Match -> {
-                        e.tiles.forEach{ tile -> tile.revealed = true}
+                        e.tiles.forEach { tile -> tile.revealed = true }
                     }
+
                     GameStates.NoMatch -> {
-                        e.tiles.forEach{ tile -> tile.revealed = true
+                        e.tiles.forEach { tile ->
+                            tile.revealed = true
 
                             Timer().schedule(500) {
-                                    runOnUiThread() {
-                                        tile.revealed = false
-                                    }
+                                runOnUiThread() {
+                                    tile.revealed = false
+                                }
                             }
                         }
                     }
+
                     GameStates.Finished -> {
                         Toast.makeText(this, "Game finished", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
         }
+
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val gameState = mBoardModel.getState().joinToString(",")
+        outState.putString("gameState", gameState)
+    }
+}
     class MemoryBoardView(
         private val gridLayout: GridLayout,
         private val cols: Int,
         private val rows: Int
+
     ) {
         private val tiles: MutableMap<String, Tile> = mutableMapOf()
         private val icons: List<Int> = listOf(
@@ -140,28 +150,23 @@ class Lab03Activity : AppCompatActivity() {
             }
         }
 
+        fun getState(): List<Int> {
+            return tiles.values.map { tile ->
+                if (tile.revealed) tile.tileResource else -1
+            }
+        }
 
-
-
-        fun getState() : state {
-            var state : MutableList<Int> = mutableListOf<Int>()
-            for (tile in tiles)
-            {
-                if(tile.value.revealed)
-                {
-                    state.add(123)
+        fun setState(state: List<Int>) {
+            tiles.values.forEachIndexed { index, tile ->
+                val tileState = state[index]
+                tile.revealed = tileState != -1
+                if (tile.revealed) {
+                    tile.button.setImageResource(tileState)
                 } else {
-                    state.add(-1)
+                    tile.button.setImageResource(tile.deckResource)
                 }
             }
-            return state
         }
-
-
-        fun setState(state){
-
-        }
-
 
         fun setOnGameChangeListener(listener: (event: MemoryGameEvent) -> Unit) {
             onGameChangeStateListener = listener
@@ -225,4 +230,3 @@ class Lab03Activity : AppCompatActivity() {
             button.setOnClickListener(null)
         }
     }
-}
