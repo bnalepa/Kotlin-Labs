@@ -1,13 +1,18 @@
 package pl.wsei.pam.pl.lab03
 
+import android.animation.Animator
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
+import android.view.animation.DecelerateInterpolator
 import android.widget.GridLayout
 import android.widget.ImageButton
 import android.widget.Toast
 import pl.wsei.pam.lab01.R
+import java.util.Random
 import java.util.Stack
 import java.util.Timer
 import kotlin.concurrent.schedule
@@ -20,14 +25,17 @@ class Lab03Activity : AppCompatActivity() {
         val columns = intent.getIntExtra("columns", 3)
         val rows = intent.getIntExtra("rows", 4)
         val mBoard: GridLayout = findViewById(R.id.grid1)
+
         mBoard.columnCount = columns
         mBoard.rowCount = rows
-        mBoardModel = MemoryBoardView(mBoard, columns, rows)
-        if (savedInstanceState != null) {
 
+        if (savedInstanceState != null) {
             val gameStateString = savedInstanceState.getString("gameState")
             val gameState = gameStateString?.split(",")?.map { it.toInt() } ?: listOf()
+            mBoardModel = MemoryBoardView(mBoard, columns, rows, gameState)
             mBoardModel.setState(gameState)
+        } else {
+            mBoardModel = MemoryBoardView(mBoard, columns, rows)
         }
 
 
@@ -39,18 +47,19 @@ class Lab03Activity : AppCompatActivity() {
                     }
 
                     GameStates.Match -> {
-                        e.tiles.forEach { tile -> tile.revealed = true }
+                        e.tiles.forEach { tile -> tile.revealed = true
+                            animatePairedButton(tile.button) {}
+                        }
+
                     }
 
                     GameStates.NoMatch -> {
                         e.tiles.forEach { tile ->
                             tile.revealed = true
 
-                            Timer().schedule(500) {
-                                runOnUiThread() {
-                                    tile.revealed = false
-                                }
-                            }
+                            animateNotPairedButton(tile.button) { tile.revealed = false }
+
+
                         }
                     }
 
@@ -72,7 +81,8 @@ class Lab03Activity : AppCompatActivity() {
     class MemoryBoardView(
         private val gridLayout: GridLayout,
         private val cols: Int,
-        private val rows: Int
+        private val rows: Int,
+        private val deleteIcons: List<Int> = listOf()
 
     ) {
         private val tiles: MutableMap<String, Tile> = mutableMapOf()
@@ -88,24 +98,30 @@ class Lab03Activity : AppCompatActivity() {
             R.drawable.baseline_moon,
             R.drawable.baseline_bolt_24,
             R.drawable.baseline_cake_24,
-            R.drawable.baseline_directions_railway_24,
-            R.drawable.baseline_water_drop_24,
+            R.drawable.baseline_view_agenda_24,
+            R.drawable.baseline_visibility_24,
             R.drawable.baseline_wb_cloudy_24,
             R.drawable.baseline_wifi_24,
             R.drawable.baseline_yard_24,
             R.drawable.baseline_moon,
             R.drawable.baseline_bolt_24,
             R.drawable.baseline_cake_24,
-            R.drawable.baseline_directions_railway_24,
-            R.drawable.baseline_water_drop_24,
-            R.drawable.baseline_wb_cloudy_24,
-            R.drawable.baseline_wifi_24,
-            R.drawable.baseline_yard_24
         )
         init {
+            val resultIcons: MutableList<Int> = icons.toMutableList()
+            for(icon in icons)
+            {
+                for(deleteIcon in deleteIcons) {
+                    if(icon == deleteIcon)
+                    {
+                        println("Delete")
+                        resultIcons.remove(icon)
+                    }
+                }
+            }
             val shuffledIcons: MutableList<Int> = mutableListOf<Int>().also {
-                it.addAll(icons.subList(0, cols * rows / 2))
-                it.addAll(icons.subList(0, cols * rows / 2))
+                it.addAll(resultIcons.subList(0, cols * rows / 2))
+                it.addAll(resultIcons.subList(0, cols * rows / 2))
                 it.shuffle()
             }
             for(row in 0 until rows)
@@ -125,13 +141,14 @@ class Lab03Activity : AppCompatActivity() {
                         it.layoutParams = layoutParams
                     }
                     gridLayout.addView(btn);
-
                     addTile(btn, shuffledIcons[0])
                     shuffledIcons.removeAt(0)
                 }
             }
 
         }
+
+
         private val deckResource: Int = R.drawable.baseline_rocket_launch_24
         private var onGameChangeStateListener: (MemoryGameEvent) -> Unit = { (e) -> }
         private val matchedPair: Stack<Tile> = Stack()
@@ -154,13 +171,16 @@ class Lab03Activity : AppCompatActivity() {
             return tiles.values.map { tile ->
                 if (tile.revealed) tile.tileResource else -1
             }
+
         }
 
         fun setState(state: List<Int>) {
             tiles.values.forEachIndexed { index, tile ->
                 val tileState = state[index]
                 tile.revealed = tileState != -1
+
                 if (tile.revealed) {
+                    tile.tileResource = state[index]
                     tile.button.setImageResource(tileState)
                 } else {
                     tile.button.setImageResource(tile.deckResource)
@@ -170,6 +190,7 @@ class Lab03Activity : AppCompatActivity() {
 
         fun setOnGameChangeListener(listener: (event: MemoryGameEvent) -> Unit) {
             onGameChangeStateListener = listener
+
         }
 
         private fun addTile(button: ImageButton, resourceImage: Int) {
@@ -205,10 +226,75 @@ class Lab03Activity : AppCompatActivity() {
             }
         }
     }
+    private fun animatePairedButton(button: ImageButton, action: Runnable ) {
+        val set = AnimatorSet()
+        val random = Random()
+        button.pivotX = random.nextFloat() * 200f
+        button.pivotY = random.nextFloat() * 200f
+
+        val rotation = ObjectAnimator.ofFloat(button, "rotation", 1080f)
+        val scallingX = ObjectAnimator.ofFloat(button, "scaleX", 1f, 2f)
+        val scallingY = ObjectAnimator.ofFloat(button, "scaleY", 1f, 2f)
+        val fade = ObjectAnimator.ofFloat(button, "alpha", 1f, 0f)
+        set.startDelay = 200
+        set.duration = 2000
+        set.interpolator = DecelerateInterpolator()
+        set.playTogether(rotation, scallingX, scallingY, fade)
+        set.addListener(object: Animator.AnimatorListener {
+
+            override fun onAnimationStart(animator: Animator) {
+            }
+
+            override fun onAnimationEnd(animator: Animator) {
+                button.scaleX = 1f
+                button.scaleY = 1f
+                button.alpha = 0.0f
+                action.run();
+            }
+
+            override fun onAnimationCancel(animator: Animator) {
+            }
+
+            override fun onAnimationRepeat(animator: Animator) {
+            }
+        })
+        set.start()
+    }
+    private fun animateNotPairedButton(button: ImageButton, action: Runnable ) {
+        val set = AnimatorSet()
+        val random = Random()
+        button.pivotX = random.nextFloat() * 200f
+        button.pivotY = random.nextFloat() * 200f
+        val moveAmount: Int = 20
+        val firstPhase = ObjectAnimator.ofFloat(button, "rotation", button.rotationX, button.rotationX + moveAmount)
+        val secondPhase = ObjectAnimator.ofFloat(button, "rotation", button.rotationX + moveAmount, button.rotationX - moveAmount)
+        val thirdPhase = ObjectAnimator.ofFloat(button, "rotation", button.rotationX - moveAmount, button.rotationX)
+
+        set.startDelay = 100
+        set.duration = 300
+        set.playSequentially(firstPhase,secondPhase,thirdPhase);
+        set.addListener(object: Animator.AnimatorListener {
+
+            override fun onAnimationStart(animator: Animator) {
+            }
+
+            override fun onAnimationEnd(animator: Animator) {
+
+                action.run();
+            }
+
+            override fun onAnimationCancel(animator: Animator) {
+            }
+
+            override fun onAnimationRepeat(animator: Animator) {
+            }
+        })
+        set.start()
+    }
     enum class GameStates {
         Matching, Match, NoMatch, Finished
     }
-    data class Tile(val button: ImageButton, val tileResource: Int, val deckResource: Int) {
+    data class Tile(val button: ImageButton, var tileResource: Int, val deckResource: Int) {
         init {
             button.setImageResource(deckResource)
         }
