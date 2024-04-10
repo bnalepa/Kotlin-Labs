@@ -7,6 +7,9 @@ import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Gravity
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import android.widget.GridLayout
@@ -24,7 +27,27 @@ class Lab03Activity : AppCompatActivity() {
     lateinit var negativePLayer: MediaPlayer
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        var isSound = true
+        fun onCreateOptionsMenu(menu: Menu): Boolean  {
+            val inflater: MenuInflater = getMenuInflater()
+            inflater.inflate(R.menu.board_activity_menu, menu)
+            return true
+        }
+        fun onOptionsItemSelected(item: MenuItem): Boolean {
+            when(item.getItemId()){
+                R.id.board_activity_sound ->
+                    if (item.getIcon()?.getConstantState()?.equals(getResources().getDrawable(R.drawable.baseline_volume_up_24, getTheme()).getConstantState())== true) {
+                        Toast.makeText(this, "Sound turn off", Toast.LENGTH_SHORT).show();
+                        item.setIcon(R.drawable.baseline_volume_off_24)
+                        isSound = false;
+                    } else {
+                        Toast.makeText(this, "Sound turn on", Toast.LENGTH_SHORT).show()
+                        item.setIcon(R.drawable.baseline_volume_up_24)
+                        isSound = true
+                    }
+            }
+            return false
+        }
         setContentView(R.layout.activity_lab03)
         val columns = intent.getIntExtra("columns", 3)
         val rows = intent.getIntExtra("rows", 4)
@@ -51,7 +74,10 @@ class Lab03Activity : AppCompatActivity() {
                     }
 
                     GameStates.Match -> {
-                        completionPlayer.start();
+                        if (isSound) {
+                            completionPlayer.start();
+                        }
+
                         e.tiles.forEach { tile -> tile.revealed = true
                             animatePairedButton(tile.button) {}
                         }
@@ -59,7 +85,9 @@ class Lab03Activity : AppCompatActivity() {
                     }
 
                     GameStates.NoMatch -> {
-                        negativePLayer.start();
+                        if (isSound) {
+                            negativePLayer.start()
+                        }
                         e.tiles.forEach { tile ->
                             tile.revealed = true
 
@@ -94,11 +122,13 @@ class Lab03Activity : AppCompatActivity() {
         negativePLayer.release()
     }
 }
+
     class MemoryBoardView(
         private val gridLayout: GridLayout,
         private val cols: Int,
         private val rows: Int,
         private val deleteIcons: List<Int> = listOf()
+
 
     ) {
         private val tiles: MutableMap<String, Tile> = mutableMapOf()
