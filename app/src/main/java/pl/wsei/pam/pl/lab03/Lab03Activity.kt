@@ -27,32 +27,11 @@ class Lab03Activity : AppCompatActivity() {
     lateinit var negativePLayer: MediaPlayer
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        var isSound = true
-        fun onCreateOptionsMenu(menu: Menu): Boolean  {
-            val inflater: MenuInflater = getMenuInflater()
-            inflater.inflate(R.menu.board_activity_menu, menu)
-            return true
-        }
-        fun onOptionsItemSelected(item: MenuItem): Boolean {
-            when(item.getItemId()){
-                R.id.board_activity_sound ->
-                    if (item.getIcon()?.getConstantState()?.equals(getResources().getDrawable(R.drawable.baseline_volume_up_24, getTheme()).getConstantState())== true) {
-                        Toast.makeText(this, "Sound turn off", Toast.LENGTH_SHORT).show();
-                        item.setIcon(R.drawable.baseline_volume_off_24)
-                        isSound = false;
-                    } else {
-                        Toast.makeText(this, "Sound turn on", Toast.LENGTH_SHORT).show()
-                        item.setIcon(R.drawable.baseline_volume_up_24)
-                        isSound = true
-                    }
-            }
-            return false
-        }
         setContentView(R.layout.activity_lab03)
         val columns = intent.getIntExtra("columns", 3)
         val rows = intent.getIntExtra("rows", 4)
         val mBoard: GridLayout = findViewById(R.id.grid1)
-
+        var isSound = true
         mBoard.columnCount = columns
         mBoard.rowCount = rows
 
@@ -106,6 +85,26 @@ class Lab03Activity : AppCompatActivity() {
 
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean  {
+        val inflater: MenuInflater = getMenuInflater()
+        inflater.inflate(R.menu.board_activity_menu, menu)
+        return true
+    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.getItemId()){
+            R.id.board_activity_sound ->
+                if (item.getIcon()?.getConstantState()?.equals(getResources().getDrawable(R.drawable.baseline_volume_up_24, getTheme()).getConstantState())== true) {
+                    Toast.makeText(this, "Sound turn off", Toast.LENGTH_SHORT).show();
+                    item.setIcon(R.drawable.baseline_volume_off_24)
+                    isSound = false;
+                } else {
+                    Toast.makeText(this, "Sound turn on", Toast.LENGTH_SHORT).show()
+                    item.setIcon(R.drawable.baseline_volume_up_24)
+                    isSound = true
+                }
+        }
+        return false
+    }
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         val gameState = mBoardModel.getState().joinToString(",")
