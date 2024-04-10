@@ -3,6 +3,7 @@ package pl.wsei.pam.pl.lab03
 import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Gravity
@@ -19,8 +20,11 @@ import kotlin.concurrent.schedule
 
 class Lab03Activity : AppCompatActivity() {
     private lateinit var mBoardModel: MemoryBoardView
+    lateinit var completionPlayer: MediaPlayer
+    lateinit var negativePLayer: MediaPlayer
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_lab03)
         val columns = intent.getIntExtra("columns", 3)
         val rows = intent.getIntExtra("rows", 4)
@@ -47,6 +51,7 @@ class Lab03Activity : AppCompatActivity() {
                     }
 
                     GameStates.Match -> {
+                        completionPlayer.start();
                         e.tiles.forEach { tile -> tile.revealed = true
                             animatePairedButton(tile.button) {}
                         }
@@ -54,6 +59,7 @@ class Lab03Activity : AppCompatActivity() {
                     }
 
                     GameStates.NoMatch -> {
+                        negativePLayer.start();
                         e.tiles.forEach { tile ->
                             tile.revealed = true
 
@@ -76,6 +82,16 @@ class Lab03Activity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
         val gameState = mBoardModel.getState().joinToString(",")
         outState.putString("gameState", gameState)
+    }
+    override protected fun onResume() {
+        super.onResume()
+        completionPlayer = MediaPlayer.create(applicationContext, R.raw.completion)
+        negativePLayer = MediaPlayer.create(applicationContext, R.raw.negative_guitar)
+    }
+    override protected fun onPause() {
+        super.onPause();
+        completionPlayer.release()
+        negativePLayer.release()
     }
 }
     class MemoryBoardView(
@@ -199,6 +215,7 @@ class Lab03Activity : AppCompatActivity() {
             tiles[button.tag.toString()] = tile
         }
 
+
     }
 
     data class MemoryGameEvent(
@@ -243,6 +260,7 @@ class Lab03Activity : AppCompatActivity() {
         set.addListener(object: Animator.AnimatorListener {
 
             override fun onAnimationStart(animator: Animator) {
+
             }
 
             override fun onAnimationEnd(animator: Animator) {
